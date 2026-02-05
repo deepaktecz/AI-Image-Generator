@@ -7,6 +7,8 @@ const countSelect = document.getElementById("count-select");
 const ratioSelect = document.getElementById("ratio-select");
 const gridGallery = document.querySelector(".gallery-grid");
 
+const API_KEY = "hf_TfNMIBZoah1GTcRGPiDMMUMWopBcBedRqL";
+
 
 // EXAMPLE PROMPTS
 const examplePrompts = [
@@ -37,6 +39,26 @@ const toggleTheme = () => {
 
 const generateImages = async (selectedModel, imageCount, aspectRatio, promptText) => {
     const MODEL_URL = `https://api-inference.huggingface.co/models/${selectedModel}`;
+    getImageDimensions(aspectRatio);
+
+    try {
+        const response = await fetch(MODEL_URL, {
+            headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify({
+                inputs: promptText,
+                parameters: {width, height},
+                options: {wait_for_model: true, user_cache: false},
+            }),
+        });
+
+        const result = await response.blob();
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 
