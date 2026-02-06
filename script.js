@@ -37,10 +37,28 @@ const toggleTheme = () => {
     isDark ? "fa-solid fa-sun" : "fa-solid fa-moon";
 };
 
+const getImageDimensions = (aspectRatio, baseSize = 512) => {
+  const [width, height] = aspectRatio.split("/").map(Number);
+
+  const scaleFactor = baseSize / Math.sqrt(width * height);
+
+  let calculatedWidth = Math.round(width * scaleFactor);
+  let calculatedHeight = Math.floor(height * scaleFactor);
+
+  calculatedWidth = Math.floor(calculatedWidth / 16) * 16;
+  calculatedHeight = Math.floor(calculatedHeight / 16) * 16;
+
+  return { width: calculatedWidth, height: calculatedHeight };
+};
+
+// send request to Hugging Face API to create images
 const generateImages = async (selectedModel, imageCount, aspectRatio, promptText) => {
     const MODEL_URL = `https://api-inference.huggingface.co/models/${selectedModel}`;
-    getImageDimensions(aspectRatio);
+    const { width, height } = getImageDimensions(aspectRatio);
 
+  // Create an array of image generation promises
+  const imagePromises = Array.from({length: imageCount}, async(_, i) => {
+    // Send request to the AI model API
     try {
         const response = await fetch(MODEL_URL, {
             headers: {
@@ -55,11 +73,17 @@ const generateImages = async (selectedModel, imageCount, aspectRatio, promptText
             }),
         });
 
+        if (!response.ok) throw new Error((await response.json())?.error);
+
         const result = await response.blob();
+        console.log(result);
     } catch (error) {
         console.log(error);
     }
-}
+  })  
+
+  await Promise.allSettled(imagePromises);
+};
 
 
 // CREATE IMAGE CARDS
